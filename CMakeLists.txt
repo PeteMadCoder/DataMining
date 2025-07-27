@@ -24,6 +24,7 @@ set(SOURCES
     src/downloader.cpp
     src/parser.cpp
     src/utils.cpp
+    src/thread_pool.cpp
 )
 
 # Create executable

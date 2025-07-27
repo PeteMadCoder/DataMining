@@ -9,6 +9,7 @@ struct CrawlerOptions {
     int max_pages = -1;     // -1 means no limit
     std::string output_dir = "output";
     bool help = false;
+    int concurrent_threads = 5;
 };
 
 CrawlerOptions parseArguments(int argc, char** argv) {
@@ -35,6 +36,11 @@ CrawlerOptions parseArguments(int argc, char** argv) {
                 options.output_dir = argv[++i];
             }
         }
+        else if (arg == "--concurrent-threads" || arg == "-t") {
+            if (i + 1 < argc) {
+                options.concurrent_threads = std::atoi(argv[++i]);
+            }
+        }
         else if (options.url.empty() && arg.find("http") == 0) {
             // Assume first non-option argument starting with http is the URL
             options.url = arg;
@@ -50,11 +56,12 @@ void printHelp(const char* program_name) {
     std::cout << "  -u, --url URL           Starting URL to crawl\n";
     std::cout << "  -m, --max-pages N       Maximum number of pages to crawl (default: unlimited)\n";
     std::cout << "  -o, --output DIR        Output directory (default: output)\n";
+    std::cout << "  -t, --concurrent-threads N Number of concurrent threads (default: 5)\n";
     std::cout << "  -h, --help              Show this help message\n";
     std::cout << "\nExamples:\n";
     std::cout << "  " << program_name << " https://example.com\n";
     std::cout << "  " << program_name << " --url https://example.com --max-pages 50\n";
-    std::cout << "  " << program_name << " -u https://example.com -m 100 -d 3\n";
+    std::cout << "  " << program_name << " -u https://example.com -m 100 -d 3 -t 10\n";
 }
 
 int main(int argc, char** argv) {
@@ -75,12 +82,14 @@ int main(int argc, char** argv) {
     std::cout << "  URL: " << options.url << "\n";
     std::cout << "  Max pages: " << (options.max_pages == -1 ? "unlimited" : std::to_string(options.max_pages)) << "\n";
     std::cout << "  Output dir: " << options.output_dir << "\n";
+    std::cout << "  Concurrent threads: " << options.concurrent_threads << "\n";
     
     curl_global_init(CURL_GLOBAL_DEFAULT);
     
     CrawlOptions crawl_opts;
     crawl_opts.max_pages = options.max_pages;
     crawl_opts.output_dir = options.output_dir;
+    crawl_opts.concurrent_threads = options.concurrent_threads;
     
     WebCrawler crawler(options.url, crawl_opts);
     crawler.crawl();
