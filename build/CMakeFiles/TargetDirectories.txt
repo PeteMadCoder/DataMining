@@ -1,0 +1,3 @@
+/home/i/Documents/projetos/MadCoder/DataMining/build/CMakeFiles/webcrawler.dir
+/home/i/Documents/projetos/MadCoder/DataMining/build/CMakeFiles/edit_cache.dir
+/home/i/Documents/projetos/MadCoder/DataMining/build/CMakeFiles/rebuild_cache.dir
