@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/webcrawler.dir/src/main.cpp.o CMakeFiles/webcrawler.dir/src/crawler.cpp.o CMakeFiles/webcrawler.dir/src/downloader.cpp.o CMakeFiles/webcrawler.dir/src/parser.cpp.o CMakeFiles/webcrawler.dir/src/utils.cpp.o -o webcrawler  /usr/lib/x86_64-linux-gnu/libcurl.so /usr/lib/x86_64-linux-gnu/libgumbo.so 
