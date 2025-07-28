@@ -17,6 +17,8 @@ include_directories(include)
 include_directories(${CURL_INCLUDE_DIRS})
 include_directories(${GUMBO_INCLUDE_DIR})
 
+include_directories(${CMAKE_SOURCE_DIR}/external/json/single_include)
+
 # Source files
 set(SOURCES
     src/main.cpp
@@ -25,11 +27,15 @@ set(SOURCES
     src/parser.cpp
     src/utils.cpp
     src/thread_pool.cpp
+    src/builtin_processors.cpp
+    src/processor.cpp
+    src/query_system.cpp
+    src/processing_pipeline.cpp
 )
 
 # Create executable
-add_executable(webcrawler ${SOURCES})
+add_executable(DataMiner ${SOURCES})
 
 # Link libraries
-target_link_libraries(webcrawler ${CURL_LIBRARIES})
-target_link_libraries(webcrawler ${GUMBO_LIBRARY})
+target_link_libraries(DataMiner ${CURL_LIBRARIES})
+target_link_libraries(DataMiner ${GUMBO_LIBRARY})
