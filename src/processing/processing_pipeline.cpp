@@ -1,17 +1,22 @@
 #include "processing_pipeline.h"
 #include "builtin_processors.h"
+#include "plugin_processor.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <nlohmann/json.hpp> // You might need to add this dependency
+#include <nlohmann/json.hpp>
+#include "plugin_interface.h"
 
-ProcessingPipeline::ProcessingPipeline(const std::string& input_dir) 
-    : input_directory(input_dir), output_format("json") {
+ProcessingPipeline::ProcessingPipeline(const std::string& input_dir, const std::string& plugins_dir) 
+    : input_directory(input_dir), output_format("json"), plugins_directory(plugins_dir) {
     // Register built-in processors
     registry.registerProcessor("generic", std::make_unique<GenericProcessor>());
     registry.registerProcessor("text", std::make_unique<TextProcessor>());
     registry.registerProcessor("metadata", std::make_unique<MetadataProcessor>());
     registry.registerProcessor("links", std::make_unique<LinkProcessor>());
+
+    // Load plugins automatically
+    loadPlugins();
 }
 
 void ProcessingPipeline::addProcessor(const std::string& processor_name) {
@@ -180,4 +185,20 @@ bool ProcessingPipeline::exportToCsv(const std::vector<ProcessedData>& data, con
         std::cerr << "Error exporting to CSV: " << e.what() << std::endl;
         return false;
     }
+}
+
+bool ProcessingPipeline::loadPlugins() {
+    std::cout << "Searching for plugins in: " << plugins_directory << std::endl;
+
+    // Find all plugin files
+    std::vector<std::string> plugin_paths = PluginLoader::findPlugins(plugins_directory);
+
+    // Load each plugin
+    for (const std::string& plugin_path : plugin_paths) {
+        if (!PluginLoader::loadPlugin(plugin_path, registry)) {
+            std::cerr << "Failed to load plugin: " << plugin_path << std::endl;
+        }
+    }
+
+    return true;
 }

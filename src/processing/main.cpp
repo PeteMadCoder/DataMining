@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
         std::cout << "Export file: " << options.export_file << std::endl;
 
         // Create processing pipeline
-        ProcessingPipeline pipeline(process_dir);
+        ProcessingPipeline pipeline(process_dir, "plugins");
         pipeline.addProcessor(options.processor_type);
         pipeline.setOutputFormat(options.export_format);
 
