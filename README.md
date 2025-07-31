@@ -93,6 +93,7 @@ Process previously crawled HTML files using a specific plugin to extract structu
 *   `--processor-type TYPE`: Name of the processor/plugin to use (e.g., `generic`, `wikipedia`, or a custom one).
 *   `-e, --export FORMAT`: Export format (`json`, `csv`, `database`).
 *   `--export-file FILE`: Name of the output file for exported data.
+*   `-pt, --processing-threads N`: Number of threads for concurrent processing (default: 4).
 
 ### Combined Mode
 
@@ -118,9 +119,14 @@ DataMiner's power lies in its plugin system. Plugins define how data is extracte
 
 ---
 
+## CPU Thread Recommendation 
+
+To help optimize performance, especially for the processing stage, a helper script `recommend_threads.sh` is available. Running this script will analyze your CPU's core and thread count and suggest an appropriate number of threads to use with the `--processing-threads` option for optimal performance. This is a conservative baseline, however, meaning that it's possible to be more eficient with more threads than those recommended. As such, you should test for your system.
+
+---
+
 ## TODOs / Future Improvements
 
-*   Implement database export functionality (`--export database`).
 *   Add more built-in processor types.
 *   Implement query system for filtering content during processing.
 *   Enhance plugin loading to support hot-swapping or configuration-based loading.

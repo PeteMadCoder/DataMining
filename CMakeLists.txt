@@ -10,6 +10,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Find required libraries
 find_package(PkgConfig REQUIRED)
 find_package(CURL REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 # Find Gumbo (you might need to adjust this based on your installation)
 find_path(GUMBO_INCLUDE_DIR gumbo.h)
@@ -36,6 +37,7 @@ include_directories(plugins)
 
 include_directories(${CURL_INCLUDE_DIRS})
 include_directories(${GUMBO_INCLUDE_DIR})
+include_directories(${SQLite3_INCLUDE_DIRS}) 
 include_directories(${CMAKE_SOURCE_DIR}/external/json/single_include)
 
 # Source files
@@ -64,6 +66,7 @@ target_link_libraries(DataMiner
     ${CURL_LIBRARIES}
     ${GUMBO_LIBRARY}
     ${DL_LIBRARY}
+    SQLite::SQLite3
 )
 
 # Add subdirectory for plugins

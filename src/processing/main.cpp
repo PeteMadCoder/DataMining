@@ -20,6 +20,7 @@ struct CrawlerOptions {
     std::string search_query;
     std::string export_format = "json";
     std::string export_file = "processed_output.json";
+    size_t processing_threads = 4;
 
     bool help = false;
 };
@@ -89,6 +90,11 @@ CrawlerOptions parseArguments(int argc, char** argv) {
                 options.export_file = argv[++i];
             }
         }
+        else if (arg == "--processing-threads" || arg == "-pt") {
+            if (i + 1 < argc) {
+                options.processing_threads = static_cast<size_t>(std::atoi(argv[++i]));
+            }
+        }
 
         else if (options.url.empty() && arg.find("http") == 0) {
             // Assume first non-option argument starting with http is the URL
@@ -114,6 +120,7 @@ void printHelp(const char* program_name) {
     std::cout << "  -q, --query TERM       Search query for filtering\n";
     std::cout << "  -e, --export FORMAT    Export format (json, csv, database)\n";
     std::cout << "  --export-file FILE     Output file name (default: processed_output.json)\n";
+    std::cout << "  -pt, --processing-threads N  Number of threads for processing (default: 4)\n";
     std::cout << "\nGeneral Options:\n";
     std::cout << "  -h, --help             Show this help message\n";
     std::cout << "\nExamples:\n";
@@ -183,7 +190,7 @@ int main(int argc, char** argv) {
         std::cout << "Export file: " << options.export_file << std::endl;
 
         // Create processing pipeline
-        ProcessingPipeline pipeline(process_dir, "plugins");
+        ProcessingPipeline pipeline(process_dir, "plugins", options.processing_threads);
         pipeline.addProcessor(options.processor_type);
         pipeline.setOutputFormat(options.export_format);
 

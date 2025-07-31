@@ -1,10 +1,13 @@
 #pragma once
 #include "processor.h"
 #include "query_system.h"
+#include "thread_pool.h"
 #include <filesystem>
 #include <queue>
 #include <string>
 #include <vector>
+#include <sqlite3.h>
+#include <memory>
 
 class ProcessingPipeline {
 private:
@@ -13,9 +16,14 @@ private:
     std::string input_directory;
     std::string output_format;  // "database", "json", "csv"
     std::string plugins_directory;
+    std::unique_ptr<ThreadPool> thread_pool;
+    size_t num_threads;
     
 public:
-    ProcessingPipeline(const std::string& input_dir, const std::string& plugins_dir = "plugins");
+    ProcessingPipeline(const std::string& input_dir,
+        const std::string& plugins_dir = "plugins",
+        size_t threads = 4
+    );
     
     void addProcessor(const std::string& processor_name);
     void setOutputFormat(const std::string& format);
@@ -26,6 +34,8 @@ public:
     
     // Process with filtering
     std::vector<ProcessedData> processWithFilter(std::unique_ptr<DataQuery> query);
+
+    std::unique_ptr<ProcessedData> processSingleFile(const std::filesystem::directory_entry& entry);
     
     // Export results
     bool exportToDatabase(const std::vector<ProcessedData>& data, const std::string& db_path);
