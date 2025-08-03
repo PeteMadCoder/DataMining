@@ -33,9 +33,10 @@ public:
     std::vector<ProcessedData> processAllFiles();
     
     // Process with filtering
-    std::vector<ProcessedData> processWithFilter(std::unique_ptr<DataQuery> query);
+    std::vector<ProcessedData> processWithFilter(DataQuery* query);
 
     std::unique_ptr<ProcessedData> processSingleFile(const std::filesystem::directory_entry& entry);
+    std::vector<ProcessedData> processFilteredFiles(DataQuery* query);
     
     // Export results
     bool exportToDatabase(const std::vector<ProcessedData>& data, const std::string& db_path);

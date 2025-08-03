@@ -22,6 +22,14 @@ struct CrawlerOptions {
     std::string export_file = "processed_output.json";
     size_t processing_threads = 4;
 
+    // Queries for processing
+    std::string filter_text;
+    bool filter_case_sensitive = false;
+    std::string filter_regex;
+    std::string filter_meta_key;
+    std::string filter_meta_value;
+    std::string filter_url_regex;
+
     bool help = false;
 };
 
@@ -96,6 +104,32 @@ CrawlerOptions parseArguments(int argc, char** argv) {
             }
         }
 
+        // Query options
+        else if (arg == "--filter-text") {
+            if (i + 1 < argc) {
+                options.filter_text = argv[++i];
+            }
+        } else if (arg == "--filter-case-sensitive") {
+            options.filter_case_sensitive = true;
+        } else if (arg == "--filter-regex") {
+            if (i + 1 < argc) {
+                options.filter_regex = argv[++i];
+            }
+        } else if (arg == "--filter-meta-key") {
+            if (i + 1 < argc) {
+                options.filter_meta_key = argv[++i];
+            }
+        } else if (arg == "--filter-meta-value") {
+            if (i + 1 < argc) {
+                options.filter_meta_value = argv[++i];
+            }
+        }
+        else if (arg == "--filter-url-regex") {
+            if (i + 1 < argc) {
+                options.filter_url_regex = argv[++i];
+            }
+        }
+
         else if (options.url.empty() && arg.find("http") == 0) {
             // Assume first non-option argument starting with http is the URL
             options.url = arg;
@@ -121,6 +155,14 @@ void printHelp(const char* program_name) {
     std::cout << "  -e, --export FORMAT    Export format (json, csv, database)\n";
     std::cout << "  --export-file FILE     Output file name (default: processed_output.json)\n";
     std::cout << "  -pt, --processing-threads N  Number of threads for processing (default: 4)\n";
+    std::cout << "\nFiltering Options (for processing mode):\n";
+    std::cout << "  --filter-text TERM       Filter files containing TERM in title/text\n";
+    std::cout << "  --filter-case-sensitive  Make text filter case-sensitive (default: false)\n";
+    std::cout << "  --filter-regex PATTERN   Filter files matching regex PATTERN in title/text\n";
+    std::cout << "  --filter-meta-key KEY    Filter files with metadata key KEY\n";
+    std::cout << "  --filter-meta-value VAL  Filter files where metadata KEY equals VAL\n";
+    std::cout << "  --filter-url-regex PATTERN   Filter files where the URL matches regex PATTERN\n";
+    std::cout << "  (Note: Only one type of filter  (--filter-text, --filter-regex, --filter-meta-*, --filter-url-regex) can be applied at a time.)\n";
     std::cout << "\nGeneral Options:\n";
     std::cout << "  -h, --help             Show this help message\n";
     std::cout << "\nExamples:\n";
@@ -194,14 +236,60 @@ int main(int argc, char** argv) {
         pipeline.addProcessor(options.processor_type);
         pipeline.setOutputFormat(options.export_format);
 
+        std::unique_ptr<DataQuery> filter_query = nullptr;
+
+        int filter_count = 0;
+        if (!options.filter_text.empty()) filter_count++;
+        if (!options.filter_regex.empty()) filter_count++;
+        if (!options.filter_meta_key.empty() || !options.filter_meta_value.empty()) filter_count++;
+        if (!options.filter_url_regex.empty()) filter_count++;
+
+        if (filter_count > 1) {
+            std::cerr << "Error: Only one filter type (--filter-text, --filter-regex, --filter-meta-*, --filter-url-regex) can be specified at a time." << std::endl;
+            return 1;
+        }
+
+        if (!options.filter_text.empty()) {
+            filter_query = std::make_unique<TextSearchQuery>(options.filter_text, options.filter_case_sensitive);
+            std::cout << "Applying text filter: '" << options.filter_text << "' (case-sensitive: " << (options.filter_case_sensitive ? "true" : "false") << ")" << std::endl;
+        } else if (!options.filter_regex.empty()) {
+            try {
+                filter_query = std::make_unique<RegexQuery>(options.filter_regex);
+                std::cout << "Applying regex filter: '" << options.filter_regex << "'" << std::endl;
+            } catch (const std::regex_error& e) {
+                std::cerr << "Error: Invalid regex pattern '" << options.filter_regex << "': " << e.what() << std::endl;
+                return 1;
+            }
+        } else if (!options.filter_meta_key.empty() || !options.filter_meta_value.empty()) {
+            if (options.filter_meta_key.empty()) {
+                std::cerr << "Error: --filter-meta-value requires --filter-meta-key." << std::endl;
+                return 1;
+            }
+            // Note: Allowing empty value is technically possible (checking for key existence)
+            // For simplicity, we require both.
+            if (options.filter_meta_value.empty()) {
+                std::cerr << "Error: --filter-meta-key requires --filter-meta-value." << std::endl;
+                return 1;
+            }
+            filter_query = std::make_unique<MetadataQuery>(options.filter_meta_key, options.filter_meta_value);
+            std::cout << "Applying metadata filter: key='" << options.filter_meta_key << "' value='" << options.filter_meta_value << "'" << std::endl;
+        } else if (!options.filter_url_regex.empty()) {
+            try {
+                filter_query = std::make_unique<UrlRegexQuery>(options.filter_url_regex);
+                std::cout << "Applying URL regex filter: '" << options.filter_url_regex << "'" << std::endl;
+            } catch (const std::regex_error& e) {
+                std::cerr << "Error: Invalid URL regex pattern '" << options.filter_url_regex << "': " << e.what() << std::endl;
+                return 1;
+            }
+        }
+
         // Process files
         std::vector<ProcessedData> processed_data;
-        if (!options.search_query.empty()) {
-            auto query = std::make_unique<TextSearchQuery>(options.search_query);
-            processed_data = pipeline.processWithFilter(std::move(query));
+        if (filter_query) {
+            processed_data = pipeline.processWithFilter(filter_query.get());
         } else {
             processed_data = pipeline.processAllFiles();
-        }
+        }        
 
         std::cout << "Processed " << processed_data.size() << " files" << std::endl;
 

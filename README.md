@@ -78,7 +78,7 @@ Crawl a website and save HTML files to a specified output directory.
 
 ### Processing
 
-Process previously crawled HTML files using a specific plugin to extract structured data.
+Process previously crawled HTML files using a specific plugin to extract structured data. You can filter which files are processed using the query system.
 
 ```bash
 # Process files using the 'wikipedia' plugin and export to JSON
@@ -94,6 +94,14 @@ Process previously crawled HTML files using a specific plugin to extract structu
 *   `-e, --export FORMAT`: Export format (`json`, `csv`, `database`).
 *   `--export-file FILE`: Name of the output file for exported data.
 *   `-pt, --processing-threads N`: Number of threads for concurrent processing (default: 4).
+
+*   **Filtering Options:**
+    *   `--filter-text TERM`: Filter files containing `TERM` in title or text content.
+    *   `--filter-case-sensitive`: Make `--filter-text` case-sensitive.
+    *   `--filter-regex PATTERN`: Filter files matching regex `PATTERN` in title or text content.
+    *   `--filter-meta-key KEY --filter-meta-value VALUE`: Filter files where metadata has the specified key-value pair.
+    *   *(Note: Only one filter type can be applied at a time.)*
+
 
 ### Combined Mode
 
@@ -116,6 +124,22 @@ DataMiner's power lies in its plugin system. Plugins define how data is extracte
 *   **Location:** Custom plugins are placed in the `plugins/` directory.
 *   **Development:** See `plugins/README.md` for instructions on creating your own plugins.
 *   **Built-in Plugin:** An example `wikipedia_plugin.cpp` is included to demonstrate data extraction from Wikipedia pages.
+
+---
+
+## Query System (Filtering)
+
+DataMiner includes a flexible query system for filtering content during the processing stage. This allows you to process only the crawled data that matches specific criteria, saving time and resources.
+
+**Available Query Types:**
+*   **`TextSearchQuery`**: Matches pages where the title or main text content contains a specific term. Supports case-sensitive and case-insensitive searches.
+*   **`RegexQuery`**: Matches pages where the title or main text content matches a given regular expression.
+*   **`MetadataQuery`**: Matches pages that have a specific key-value pair in their extracted metadata.
+*   **`AndQuery`**: Combines multiple queries; a page matches only if *all* sub-queries match. *(Defined programmatically)*
+*   **`OrQuery`**: Combines multiple queries; a page matches if *any* sub-query matches. *(Defined programmatically)*
+*   **`NotQuery`**: Negates another query; a page matches if the sub-query does *not* match. *(Defined programmatically)*
+
+Filtering options are available via the command line as shown in the Usage section.
 
 ---
 

@@ -105,22 +105,44 @@ std::vector<ProcessedData> ProcessingPipeline::processAllFiles() {
     return results;
 }
 
-std::vector<ProcessedData> ProcessingPipeline::processWithFilter(std::unique_ptr<DataQuery> query) {
+std::vector<ProcessedData> ProcessingPipeline::processWithFilter(DataQuery* query) {
+    // Validate input
+    if (!query) {
+        std::cerr << "processWithFilter: Null query provided." << std::endl;
+        return {};
+    }
+
     // Get all processed data first
-    std::vector<ProcessedData> all_data = processAllFiles(); // This now uses threads
+    std::vector<ProcessedData> all_data = processAllFiles();
     
-    // Then filter it
+    if (all_data.empty()) {
+        std::cout << "No data to filter." << std::endl;
+        return all_data;
+    }
+
+    std::cout << "Filtering " << all_data.size() << " processed items..." << std::endl;
+
+    // Filter the data using the provided query
     std::vector<ProcessedData> filtered_data;
-    filtered_data.reserve(all_data.size()); // Reserve potential space
 
     for (const auto& data : all_data) {
         if (query->matches(data)) {
             filtered_data.push_back(data);
         }
     }
-    
-    std::cout << "Filtering complete: " << filtered_data.size() << " out of " << all_data.size() << " files matched the query." << std::endl;
+
+    std::cout << "Filtering complete: " << filtered_data.size()
+        << " out of " << all_data.size() << " items matched the query." << std::endl;
     return filtered_data;
+}
+
+std::vector<ProcessedData> ProcessingPipeline::processFilteredFiles(DataQuery* query) {
+    // This implies that it processes files and then filters them
+    // But that is what the processWithFilter does currently so
+    // as of now it just delegates work.
+    // In the future, if convinient, this implementation can be
+    // broadned
+    return processWithFilter(query);
 }
 
 
