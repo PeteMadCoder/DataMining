@@ -159,6 +159,4 @@ To help optimize performance, especially for the processing stage, a helper scri
 ## TODOs / Future Improvements
 
 *   Add more built-in processor types.
-*   Implement query system for filtering content during processing.
-*   Enhance plugin loading to support hot-swapping or configuration-based loading.
 *   Improve command-line argument parsing and help messages.
