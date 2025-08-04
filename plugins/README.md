@@ -11,7 +11,39 @@ This directory is where you place custom processing plugins for the DataMiner ap
 4.  **Registration:** Each loaded plugin must provide a `registerPlugin` function. DataMiner calls this function, passing its internal `ProcessorRegistry`. The plugin uses this to register its processing logic under a unique name.
 5.  **Usage:** You specify which processor to use via the command line when running DataMiner in processing mode (e.g., `./DataMiner --process ./output --processor-type my_custom_name`).
 
-## Creating a New Plugin
+## Creating a New Plugin (Using the Template Script)
+
+The easiest way to create a new plugin is to use the provided template script.
+
+1.  **Run the Script:**
+    ```bash
+    cd plugins
+    ./create_plugin.sh my_new_plugin_name
+    ```
+    This command creates a new file `my_new_plugin_name.cpp` pre-filled with the standard plugin boilerplate code.
+
+2.  **Modify the Template:**
+    *   Open the generated `my_new_plugin_name.cpp` file in your editor.
+    *   Implement your custom data extraction logic inside the provided extractor functions (e.g., modify `extractCustomData`) or add new ones.
+    *   Update the plugin metadata (name, version, description, author) inside the `registerPlugin` function.
+    *   Add any necessary `#include` directives for libraries you plan to use (e.g., `<gumbo.h>` for HTML parsing).
+
+3.  **Build DataMiner:**
+    Go to your build directory and re-run the build process. The build system will automatically detect your new plugin source file and compile it.
+    ```bash
+    cd /path/to/your/DataMiner/build
+    cmake ..   # Reconfigure to find the new plugin source
+    make       # Build the project, including the new plugin
+    ```
+
+4.  **Use Your Plugin:**
+    Run DataMiner in processing mode and specify your new processor name:
+    ```bash
+    ./DataMiner --process /path/to/crawled/files --processor-type my_new_plugin_name --export json --export-file my_output.json
+    ```
+
+
+## Creating a New Plugin (Manual Method)
 
 Follow these steps to create your own data processor:
 
@@ -145,11 +177,12 @@ Run DataMiner in processing mode and specify your new processor name:
 
 ## Tips for Plugin Development
 
-*   **Use Gumbo:** For reliable HTML parsing, prefer using the Gumbo library (`#include <gumbo.h>`) over regular expressions. It's already available in your project.
-*   **Populate `ProcessedData`:** Make use of all relevant fields in the `ProcessedData` struct (`title`, `text_content`, `links`, `images`, `keywords`, `metadata`) to store the extracted information.
-*   **Handle Errors:** Add checks for potential issues like failed regex matches or null Gumbo nodes.
-*   **Unique Names:** Ensure the name you pass to `PluginProcessor("name")` and `registry.registerProcessor("name", ...)` is unique and descriptive.
-*   **Test:** Test your plugin on a small set of crawled HTML files first to make sure it behaves as expected.
+*   **Use Gumbo:** For reliable HTML parsing, prefer using the Gumbo library (`#include <gumbo.h>`) over regular expressions. It's already available in your project and handles malformed HTML gracefully. See `wikipedia_plugin.cpp` for a comprehensive example.
+*   **Populate `ProcessedData`:** Make full use of the `ProcessedData` struct fields (`title`, `text_content`, `links`, `images`, `keywords`, `metadata`) to store the extracted information in a structured way.
+*   **Handle Errors Gracefully:** Add checks for potential issues like failed regex matches, null Gumbo nodes, invalid configuration values, or file I/O problems. Prevent your plugin from crashing the entire DataMiner process.
+*   **Unique Names:** Ensure the name you pass to `PluginProcessor("name")` and `registry.registerProcessor("name", ...)` is unique and descriptive to avoid conflicts.
+*   **Test Incrementally:** Test your plugin on a small set of crawled HTML files first to make sure it behaves as expected before running it on large datasets.
+*   **Leverage Meta** Use `PluginMetadata` and the optional `getPlugin*` functions to make your plugin more discoverable and user-friendly. Users can list available plugins with `./DataMiner --list-processors`.
 
 ## Example Plugins
 

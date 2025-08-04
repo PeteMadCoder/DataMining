@@ -5,6 +5,7 @@
 #include <curl/curl.h>
 #include <string>
 #include <cstdlib>
+#include <nlohmann/json.hpp>
 
 struct CrawlerOptions {
     // Crawler options
@@ -29,6 +30,10 @@ struct CrawlerOptions {
     std::string filter_meta_key;
     std::string filter_meta_value;
     std::string filter_url_regex;
+
+    // Plugin Options
+    std::string plugin_config_str; // For --plugin-config
+    bool list_processors = false;  // For --list-processors
 
     bool help = false;
 };
@@ -130,6 +135,15 @@ CrawlerOptions parseArguments(int argc, char** argv) {
             }
         }
 
+        // Plugin Options
+        else if (arg == "--plugin-config") {
+            if (i + 1 < argc) {
+                options.plugin_config_str = argv[++i];
+            }
+        } else if (arg == "--list-processors" || arg == "-lp") {
+            options.list_processors = true;
+        }
+
         else if (options.url.empty() && arg.find("http") == 0) {
             // Assume first non-option argument starting with http is the URL
             options.url = arg;
@@ -163,6 +177,10 @@ void printHelp(const char* program_name) {
     std::cout << "  --filter-meta-value VAL  Filter files where metadata KEY equals VAL\n";
     std::cout << "  --filter-url-regex PATTERN   Filter files where the URL matches regex PATTERN\n";
     std::cout << "  (Note: Only one type of filter  (--filter-text, --filter-regex, --filter-meta-*, --filter-url-regex) can be applied at a time.)\n";
+    std::cout << "\nPlugin Options:\n";
+    std::cout << "  --plugin-config JSON     Set configuration for the processor as a JSON string.\n";
+    std::cout << "                           E.g., --plugin-config '{\"max_paragraphs\": \"5\", \"extract_images\": \"false\"}'\n";
+    std::cout << "  -lp, --list-processors   List all available processors and their metadata.\n";
     std::cout << "\nGeneral Options:\n";
     std::cout << "  -h, --help             Show this help message\n";
     std::cout << "\nExamples:\n";
@@ -235,6 +253,35 @@ int main(int argc, char** argv) {
         ProcessingPipeline pipeline(process_dir, "plugins", options.processing_threads);
         pipeline.addProcessor(options.processor_type);
         pipeline.setOutputFormat(options.export_format);
+
+        if (options.list_processors) {
+            pipeline.listProcessors();
+            return 0; // Exit after listing
+        }
+
+        if (!options.plugin_config_str.empty()) {
+            // Parse the JSON string config
+            try {
+                auto j_config = nlohmann::json::parse(options.plugin_config_str);
+                PluginConfig config_map;
+                
+                for (auto it = j_config.begin(); it != j_config.end(); ++it) {
+                    // Convert JSON values to strings for the simple PluginConfig map
+                    // This assumes config values are strings, numbers, or booleans that can be stringified.
+                    config_map[it.key()] = it.value().dump(); 
+                }
+
+                if (!options.processor_type.empty()) {
+                    pipeline.setProcessorConfig(options.processor_type, config_map);
+                    std::cout << "Plugin configuration applied for processor type '" << options.processor_type << "'." << std::endl;
+                } else {
+                    std::cerr << "Warning: --plugin-config specified, but no --processor-type given. Configuration not applied." << std::endl;
+                }
+            } catch (const nlohmann::json::exception& e) {
+                std::cerr << "Error parsing --plugin-config JSON: " << e.what() << std::endl;
+                return 1;
+            }
+        }
 
         std::unique_ptr<DataQuery> filter_query = nullptr;
 

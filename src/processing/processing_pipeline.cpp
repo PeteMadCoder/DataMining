@@ -553,6 +553,13 @@ std::unique_ptr<ProcessedData> ProcessingPipeline::processSingleFile(const std::
     ContentProcessor* processor = registry.getProcessor(processor_name);
 
     if (processor) {
+        // --- Apply Configuration ---
+        auto config_it = processor_configs.find(processor_name);
+        if (config_it != processor_configs.end()) {
+            // std::cout << "Applying configuration to processor '" << processor_name << "'..." << std::endl;
+            processor->setConfig(config_it->second);
+        }
+
         // Extract URL from filename (this is a simplification)
         std::string url = "file://" + entry.path().string();
         ProcessedData data = processor->process(url, content);
@@ -560,5 +567,34 @@ std::unique_ptr<ProcessedData> ProcessingPipeline::processSingleFile(const std::
     } else {
         std::cerr << "Processor not found: " << processor_name << std::endl;
         return nullptr;
+    }
+}
+
+void ProcessingPipeline::setProcessorConfig(const std::string& processor_name, const PluginConfig& config) {
+    processor_configs[processor_name] = config;
+    std::cout << "Configuration set for processor '" << processor_name << "' (" << config.size() << " parameters)." << std::endl;
+}
+
+void ProcessingPipeline::listProcessors() {
+    auto names = registry.getAvailableProcessors();
+    if (names.empty()) {
+        std::cout << "No processors are currently registered." << std::endl;
+        return;
+    }
+    
+    std::cout << "Available Processors:" << std::endl;
+    for (const auto& name : names) {
+        ContentProcessor* processor = registry.getProcessor(name);
+        if (processor) {
+            PluginMetadata meta = processor->getMetadata();
+            std::cout << "  - " << meta.name << " (v" << meta.version << ")" << std::endl;
+            std::cout << "    Description: " << meta.description << std::endl;
+            std::cout << "    Author: " << meta.author << std::endl;
+            std::cout << "    Registered as: " << name << std::endl;
+            std::cout << std::endl;
+        } else {
+            // Should not happen if registry is working correctly
+            std::cout << "  - " << name << " (Metadata unavailable)" << std::endl;
+        }
     }
 }

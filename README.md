@@ -94,12 +94,15 @@ Process previously crawled HTML files using a specific plugin to extract structu
 *   `-e, --export FORMAT`: Export format (`json`, `csv`, `database`).
 *   `--export-file FILE`: Name of the output file for exported data.
 *   `-pt, --processing-threads N`: Number of threads for concurrent processing (default: 4).
+*   `--plugin-config JSON`: Set configuration for the selected processor as a JSON string (e.g., `'{"option1": "value1", "option2": "value2"}'`).
+*   `-lp, --list-processors`: List all available processors and their metadata.
 
 *   **Filtering Options:**
     *   `--filter-text TERM`: Filter files containing `TERM` in title or text content.
     *   `--filter-case-sensitive`: Make `--filter-text` case-sensitive.
     *   `--filter-regex PATTERN`: Filter files matching regex `PATTERN` in title or text content.
     *   `--filter-meta-key KEY --filter-meta-value VALUE`: Filter files where metadata has the specified key-value pair.
+    *   `--filter-url-regex PATTERN`: Filter files where the processed URL matches regex `PATTERN`.
     *   *(Note: Only one filter type can be applied at a time.)*
 
 
@@ -131,13 +134,16 @@ DataMiner's power lies in its plugin system. Plugins define how data is extracte
 
 DataMiner includes a flexible query system for filtering content during the processing stage. This allows you to process only the crawled data that matches specific criteria, saving time and resources.
 
-**Available Query Types:**
-*   **`TextSearchQuery`**: Matches pages where the title or main text content contains a specific term. Supports case-sensitive and case-insensitive searches.
-*   **`RegexQuery`**: Matches pages where the title or main text content matches a given regular expression.
-*   **`MetadataQuery`**: Matches pages that have a specific key-value pair in their extracted metadata.
-*   **`AndQuery`**: Combines multiple queries; a page matches only if *all* sub-queries match. *(Defined programmatically)*
-*   **`OrQuery`**: Combines multiple queries; a page matches if *any* sub-query matches. *(Defined programmatically)*
-*   **`NotQuery`**: Negates another query; a page matches if the sub-query does *not* match. *(Defined programmatically)*
+**Available Query Types (Command-Line Accessible):**
+*   **`TextSearchQuery`** (`--filter-text`): Matches pages where the title or main text content contains a specific term. Supports case-sensitive and case-insensitive searches.
+*   **`RegexQuery`** (`--filter-regex`): Matches pages where the title or main text content matches a given regular expression.
+*   **`MetadataQuery`** (`--filter-meta-key`/`--filter-meta-value`): Matches pages that have a specific key-value pair in their extracted metadata.
+*   **`UrlRegexQuery`** (`--filter-url-regex`): Matches pages where the processed URL (e.g., `file://path/to/saved_file.html`) matches a given regular expression. Useful for processing only files saved from specific original URLs.
+
+**Available Query Types (Programmatic):**
+*   **`AndQuery`**: Combines multiple queries; a page matches only if *all* sub-queries match.
+*   **`OrQuery`**: Combines multiple queries; a page matches if *any* sub-query matches.
+*   **`NotQuery`**: Negates another query; a page matches if the sub-query does *not* match.
 
 Filtering options are available via the command line as shown in the Usage section.
 

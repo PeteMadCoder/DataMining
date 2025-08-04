@@ -18,6 +18,8 @@ private:
     std::string plugins_directory;
     std::unique_ptr<ThreadPool> thread_pool;
     size_t num_threads;
+
+    std::unordered_map<std::string, PluginConfig> processor_configs;
     
 public:
     ProcessingPipeline(const std::string& input_dir,
@@ -28,7 +30,10 @@ public:
     void addProcessor(const std::string& processor_name);
     void setOutputFormat(const std::string& format);
     bool loadPlugins();
-    
+
+    void setProcessorConfig(const std::string& processor_name, const PluginConfig& config);
+    void listProcessors();
+
     // Process all files in directory
     std::vector<ProcessedData> processAllFiles();
     
