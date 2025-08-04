@@ -127,6 +127,7 @@ DataMiner's power lies in its plugin system. Plugins define how data is extracte
 *   **Location:** Custom plugins are placed in the `plugins/` directory.
 *   **Development:** See `plugins/README.md` for instructions on creating your own plugins.
 *   **Built-in Plugin:** An example `wikipedia_plugin.cpp` is included to demonstrate data extraction from Wikipedia pages.
+*   *(Note: Other than an example, there is a script that generates a template for the plugin.)*
 
 ---
 
